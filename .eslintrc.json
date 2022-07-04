@@ -1,0 +1,17 @@
+{
+  "root": true,
+  "parserOptions": {
+    "ecmaVersion": "latest",
+    "sourceType": "script"
+  },
+  "extends": ["eslint:recommended", "prettier"],
+  "env": {
+    "browser": true,
+    "es2021": true,
+    "node": true
+  },
+  "ignorePatterns": ["node_modules/"],
+  "rules": {
+    "no-unused-vars": ["error", { "argsIgnorePattern": "next" }]
+  }
+}
