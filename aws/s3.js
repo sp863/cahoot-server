@@ -20,6 +20,23 @@ exports.uploadFile = (file) => {
   return s3.upload(uploadParams).promise();
 };
 
+exports.getFile = async (fileKey) => {
+  const file = await s3
+    .getObject({ Bucket: envKeys.AWS_BUCKET_NAME, Key: fileKey })
+    .promise();
+
+  return file;
+};
+
+exports.getFileUrl = async (fileKey) => {
+  const signedUrl = await s3.getSignedUrl("getObject", {
+    Key: fileKey,
+    Bucket: envKeys.AWS_BUCKET_NAME,
+  });
+
+  return signedUrl;
+};
+
 exports.getFileStream = (fileKey) => {
   const downloadParams = {
     Key: fileKey,
@@ -27,4 +44,10 @@ exports.getFileStream = (fileKey) => {
   };
 
   return s3.getObject(downloadParams).createReadStream();
+};
+
+exports.deleteFile = async (fileKey) => {
+  await s3
+    .deleteObject({ Bucket: envKeys.AWS_BUCKET_NAME, Key: fileKey })
+    .promise();
 };

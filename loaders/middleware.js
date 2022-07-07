@@ -11,6 +11,7 @@ const initiateMiddlewares = (app) => {
     cors({
       origin: [envKeys.FRONTEND_URL],
       methods: ["GET", "POST", "PATCH", "DELETE"],
+      credentials: true,
     }),
   );
 

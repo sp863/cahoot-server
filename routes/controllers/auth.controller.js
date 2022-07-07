@@ -4,7 +4,7 @@ const jwt = require("jsonwebtoken");
 const envKeys = require("../../config/envConfig");
 
 exports.createUser = async (req, res, next) => {
-  const { lastName, firstName, organization, email, password } = req.body;
+  const { name, organization, email, password } = req.body;
 
   const user = await User.findOne({ email });
 
@@ -13,8 +13,7 @@ exports.createUser = async (req, res, next) => {
   const hashedPassword = await bcrypt.hash(password, 12);
 
   const newUser = new User({
-    lastName,
-    firstName,
+    name,
     organization,
     email,
     password: hashedPassword,
@@ -22,13 +21,13 @@ exports.createUser = async (req, res, next) => {
 
   await newUser.save();
 
-  return res.send({ result: "success", data: { me: "xxx" } });
+  return res.send({ result: "success" });
 };
 
 exports.loginUser = async (req, res, next) => {
   const { email, password } = req.body;
 
-  const user = await User.findOne({ email }).lean();
+  const user = await User.findOne({ email });
 
   if (!user) return res.status(401).send({ result: "failure" });
 
@@ -44,13 +43,25 @@ exports.loginUser = async (req, res, next) => {
   });
 
   user.refreshToken = refreshToken;
+  user.firstTime = false;
   await user.save();
 
   res.cookie("jwt", refreshToken, {
     httpOnly: true,
     maxAge: 24 * 60 * 60 * 1000,
   });
-  res.send({ result: "success", accessToken });
+  res.send({
+    result: "success",
+    user: {
+      email: user.email,
+      name: user.name,
+      firstTime: user.firstTime,
+      organization: user.organization,
+      profilePicture: user.profilePicture,
+      user_id: user._id,
+    },
+    accessToken,
+  });
 };
 
 exports.logoutUser = async (req, res, next) => {
@@ -60,7 +71,7 @@ exports.logoutUser = async (req, res, next) => {
 
   const refreshToken = cookies.jwt;
 
-  const user = await User.findOne({ refreshToken }).lean();
+  const user = await User.findOne({ refreshToken });
 
   if (!user) {
     res.clearCookie("jwt", { httpOnly: true, maxAge: 24 * 60 * 60 * 1000 });
@@ -77,6 +88,8 @@ exports.logoutUser = async (req, res, next) => {
 
 exports.handleRefreshToken = async (req, res, next) => {
   const cookies = req.cookies;
+
+  console.log("COOKIES", cookies);
 
   if (!cookies?.jwt) return res.status(401).send({ result: "failure" });
 
@@ -99,6 +112,17 @@ exports.handleRefreshToken = async (req, res, next) => {
       { expiresIn: "1h" },
     );
 
-    return res.send({ result: "success", accessToken });
+    return res.send({
+      result: "success",
+      user: {
+        email: user.email,
+        name: user.name,
+        firstTime: user.firstTime,
+        organization: user.organization,
+        profilePicture: user.profilePicture,
+        user_id: user._id,
+      },
+      accessToken,
+    });
   });
 };

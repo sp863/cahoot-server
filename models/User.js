@@ -2,11 +2,7 @@ const mongoose = require("mongoose");
 
 const userSchema = new mongoose.Schema(
   {
-    lastName: {
-      type: String,
-      required: true,
-    },
-    firstName: {
+    name: {
       type: String,
       required: true,
     },
@@ -23,9 +19,9 @@ const userSchema = new mongoose.Schema(
     },
     firstTime: {
       type: Boolean,
-      default: false,
+      default: true,
     },
-    profilePicture: {
+    profileImageKey: {
       type: String,
       default: "default_profile-image.jpeg",
     },

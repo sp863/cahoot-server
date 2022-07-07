@@ -6,8 +6,6 @@ const verifyJWT = (req, res, next) => {
 
   if (!authHeader) return res.status(401).send({ result: "failure" });
 
-  console.log(authHeader);
-
   const token = authHeader.split(" ")[1];
 
   jwt.verify(token, envKeys.ACCESS_TOKEN_SECRET, (err, decoded) => {
