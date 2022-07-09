@@ -19,6 +19,7 @@ router.post("/:user_id/face-id", function (req, res, next) {
   res.send("respond with a resource");
 });
 
+router.get("/:user_id/projects", usersController.getUserProjects);
 router.get("/:user_id/profile-image", usersController.getUserProfileImageUrl);
 
 //test

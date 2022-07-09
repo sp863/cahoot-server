@@ -89,14 +89,9 @@ exports.logoutUser = async (req, res, next) => {
 exports.handleRefreshToken = async (req, res, next) => {
   const cookies = req.cookies;
 
-  console.log("COOKIES", cookies);
-
   if (!cookies?.jwt) return res.status(401).send({ result: "failure" });
 
-  console.log(cookies.jwt);
-
   const refreshToken = cookies.jwt;
-
   const user = await User.findOne({ refreshToken });
 
   if (!user) return res.status(403).send({ result: "failure" });

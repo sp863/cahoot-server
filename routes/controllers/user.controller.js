@@ -15,6 +15,17 @@ exports.getUserProfileImageUrl = async (req, res, next) => {
   // const imageBase64 = buffer.toString("base64");
 
   const imageUrl = await getFileUrl(user.profileImageKey);
+  console.log(imageUrl);
 
   res.send(imageUrl);
+};
+
+exports.getUserProjects = async (req, res, next) => {
+  const { user_id } = req.params;
+
+  const user = await User.findById(user_id).populate("projects").lean();
+
+  if (!user) return res.status(401).send({ result: "failure" });
+
+  res.send(user.projects);
 };
