@@ -15,7 +15,6 @@ exports.getUserProfileImageUrl = async (req, res, next) => {
   // const imageBase64 = buffer.toString("base64");
 
   const imageUrl = await getFileUrl(user.profileImageKey);
-  console.log(imageUrl);
 
   res.send(imageUrl);
 };
