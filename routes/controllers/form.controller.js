@@ -11,12 +11,9 @@ const { signPDF } = require("../../digitalSignature/signPDF.js");
 exports.uploadNewForm = async (req, res, next) => {
   const formFiles = req.files;
   const { project_id, title, requiredSignatures } = req.body;
-  console.log(formFiles);
-
   const formImageKeys = formFiles
     .map((formImage) => formImage.filename)
     .slice(0, formFiles.length - 1);
-
   const newForm = new Form({
     title,
     belongsToProject: project_id,
