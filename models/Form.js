@@ -10,7 +10,7 @@ const FormSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Project",
     },
-    formKey: {
+    pdfFileKey: {
       type: String,
       required: true,
     },
@@ -18,6 +18,16 @@ const FormSchema = new mongoose.Schema(
       {
         type: String,
         required: true,
+      },
+    ],
+    requiredSignatures: {
+      type: Number,
+      default: 0,
+      required: true,
+    },
+    signed: [
+      {
+        type: String,
       },
     ],
   },
