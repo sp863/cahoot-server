@@ -21,9 +21,9 @@
     "mongoose": "^6.4.2",
     "morgan": "~1.9.1",
     "multer": "^1.4.5-lts.1",
+    "node-openssl-cert": "^0.1.41",
     "pdf-img-convert": "^1.0.6",
-    "pdf-lib": "^1.17.1",
-    "pdf2pic": "^2.1.4"
+    "pdf-lib": "^1.17.1"
   },
   "devDependencies": {
     "eslint": "^8.19.0",

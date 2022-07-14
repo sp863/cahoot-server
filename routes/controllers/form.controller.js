@@ -6,7 +6,7 @@ const unlinkFile = util.promisify(fs.unlink);
 const { uploadFile, getFileUrl, getFile } = require("../../aws/s3");
 const { default: mongoose } = require("mongoose");
 const User = require("../../models/User");
-const { signPDF } = require("../../pdf/pdf");
+const { signPDF } = require("../../digitalSignature/signPDF.js");
 
 exports.uploadNewForm = async (req, res, next) => {
   const formFiles = req.files;
@@ -111,10 +111,6 @@ exports.signDocForm = async (req, res, next) => {
   }
 
   form.signed.push(user.email);
-
-  if (form.signed.length === form.requiredSignatures) {
-    //programmatically sign the document
-  }
 
   await form.save();
 
