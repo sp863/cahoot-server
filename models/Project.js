@@ -8,7 +8,6 @@ const projectSchema = new mongoose.Schema(
     },
     projectUrl: {
       type: String,
-      required: true,
     },
     participants: [
       {

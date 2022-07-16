@@ -4,6 +4,9 @@ const User = require("../../models/User");
 const { default: mongoose } = require("mongoose");
 const { getFileUrl } = require("../../aws/s3");
 const Task = require("../../models/Task");
+const { sendInviteEmail } = require("../../utils/sendEmail");
+const jwt = require("jsonwebtoken");
+const envKeys = require("../../config/envConfig");
 
 exports.createProject = async (req, res, next) => {
   const { name, user_id } = req.body;
@@ -115,4 +118,56 @@ exports.updateTask = async (req, res, next) => {
   await task.save();
 
   return res.send({ result: "success" });
+};
+
+exports.sendInvite = async (req, res, next) => {
+  const { project_id } = req.params;
+  const emailData = req.body;
+
+  const project = await Project.findById(project_id).lean();
+
+  if (!project) return res.status(409).send({ result: "failure" });
+
+  const confirmationCode = jwt.sign(
+    { email: emailData.to, project_id },
+    envKeys.ACCESS_TOKEN_SECRET,
+    { expiresIn: "3d" },
+  );
+
+  await sendInviteEmail(
+    emailData.to,
+    project.name,
+    emailData.fromUser,
+    `http://localhost:3000/projects/invite/${confirmationCode}`,
+  );
+
+  return res.send({ result: "success" });
+};
+
+exports.verifyInvite = async (req, res, next) => {
+  const { code } = req.body;
+
+  jwt.verify(code, envKeys.ACCESS_TOKEN_SECRET, async (error, decoded) => {
+    if (error) return res.status(403).send({ result: "failure" });
+
+    const user = await User.findOne({ email: decoded.email });
+    const project = await Project.findById(decoded.project_id);
+
+    if (!user) return res.status(403).send({ result: "invalid account" });
+    if (!project) return res.status(403).send({ result: "failure" });
+
+    project.participants.push(user);
+    user.projects.push(project);
+
+    const mongoSession = await mongoose.startSession();
+    mongoSession.startTransaction();
+
+    await project.save({ session: mongoSession });
+    await user.save({ session: mongoSession });
+
+    await mongoSession.commitTransaction();
+    mongoSession.endSession();
+
+    return res.send({ result: project.name });
+  });
 };
