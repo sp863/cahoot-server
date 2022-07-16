@@ -2,6 +2,7 @@ const User = require("../../models/User");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const envKeys = require("../../config/envConfig");
+const { getFileUrl } = require("../../aws/s3");
 
 exports.createUser = async (req, res, next) => {
   const { name, organization, email, password } = req.body;
@@ -41,6 +42,7 @@ exports.loginUser = async (req, res, next) => {
   const refreshToken = jwt.sign({ email }, envKeys.REFRESH_TOKEN_SECRET, {
     expiresIn: "1d",
   });
+  const userImageUrl = await getFileUrl(user.profileImageKey);
 
   user.refreshToken = refreshToken;
   user.firstTime = false;
@@ -59,6 +61,7 @@ exports.loginUser = async (req, res, next) => {
       organization: user.organization,
       profilePicture: user.profilePicture,
       user_id: user._id,
+      imageUrl: userImageUrl,
     },
     accessToken,
   });
@@ -96,6 +99,8 @@ exports.handleRefreshToken = async (req, res, next) => {
 
   if (!user) return res.status(403).send({ result: "failure" });
 
+  const userImageUrl = await getFileUrl(user.profileImageKey);
+
   jwt.verify(refreshToken, envKeys.REFRESH_TOKEN_SECRET, (error, decoded) => {
     if (error || user.email !== decoded.email) {
       return res.status(403).send({ result: "failure" });
@@ -116,6 +121,7 @@ exports.handleRefreshToken = async (req, res, next) => {
         organization: user.organization,
         profilePicture: user.profilePicture,
         user_id: user._id,
+        imageUrl: userImageUrl,
       },
       accessToken,
     });
