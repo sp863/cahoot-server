@@ -6,10 +6,20 @@ const projectSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    projectUrl: {
+      type: String,
+      required: true,
+    },
     participants: [
       {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
+      },
+    ],
+    tasks: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Task",
       },
     ],
     forms: [
