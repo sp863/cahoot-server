@@ -7,6 +7,9 @@
 const app = require("../app");
 const debug = require("debug")("cahoot-backend:server");
 const http = require("http");
+const { Server } = require("socket.io");
+const envKeys = require("../config/envConfig");
+const editor = require("../socket.io/connection");
 
 /**
  * Get port from environment and store in Express.
@@ -20,6 +23,13 @@ app.set("port", port);
  */
 
 const server = http.createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: envKeys.FRONTEND_URL,
+    methods: ["GET", "POST"],
+  },
+});
+editor(io);
 
 /**
  * Listen on provided port, on all network interfaces.

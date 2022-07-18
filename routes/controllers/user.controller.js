@@ -47,7 +47,7 @@ exports.getUserFaceId = async (req, res, next) => {
 exports.getUserProfileImageUrl = async (req, res, next) => {
   const { user_id } = req.params;
 
-  const user = await User.findOne({ _id: user_id }).lean();
+  const user = await User.findById(user_id).lean();
 
   if (!user) return res.status(401).send({ result: "failure" });
 

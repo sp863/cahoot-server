@@ -7,6 +7,7 @@ const Task = require("../../models/Task");
 const { sendInviteEmail } = require("../../utils/sendEmail");
 const jwt = require("jsonwebtoken");
 const envKeys = require("../../config/envConfig");
+const Room = require("../../models/Room");
 
 exports.createProject = async (req, res, next) => {
   const { name, user_id } = req.body;
@@ -40,6 +41,7 @@ exports.getProject = async (req, res, next) => {
   const project = await Project.findById(project_id)
     .populate("participants")
     .populate("tasks")
+    .populate("rooms")
     .lean();
 
   if (!project) return res.status(404).send({ result: "failure" });
@@ -122,22 +124,22 @@ exports.updateTask = async (req, res, next) => {
 
 exports.sendInvite = async (req, res, next) => {
   const { project_id } = req.params;
-  const emailData = req.body;
+  const { from, to, fromUser } = req.body;
 
   const project = await Project.findById(project_id).lean();
 
   if (!project) return res.status(409).send({ result: "failure" });
 
   const confirmationCode = jwt.sign(
-    { email: emailData.to, project_id },
+    { from, to, project_id },
     envKeys.ACCESS_TOKEN_SECRET,
     { expiresIn: "3d" },
   );
 
   await sendInviteEmail(
-    emailData.to,
+    to,
+    fromUser,
     project.name,
-    emailData.fromUser,
     `http://localhost:3000/projects/invite/${confirmationCode}`,
   );
 
@@ -150,17 +152,39 @@ exports.verifyInvite = async (req, res, next) => {
   jwt.verify(code, envKeys.ACCESS_TOKEN_SECRET, async (error, decoded) => {
     if (error) return res.status(403).send({ result: "failure" });
 
-    const user = await User.findOne({ email: decoded.email });
-    const project = await Project.findById(decoded.project_id);
+    const { from, to, project_id } = decoded;
+
+    const fromUser = await User.findOne({ email: from });
+    const user = await User.findOne({ email: to });
+    const project = await Project.findById(project_id).populate("rooms");
 
     if (!user) return res.status(403).send({ result: "invalid account" });
     if (!project) return res.status(403).send({ result: "failure" });
+    if (!fromUser) return res.status(403).send({ result: "failure" });
 
-    project.participants.push(user);
-    user.projects.push(project);
+    let isRoomCreated = false;
+
+    for (const room of project.rooms) {
+      if (room.users.includes(fromUser._id) && room.users.includes(user._id)) {
+        isRoomCreated = true;
+      }
+    }
 
     const mongoSession = await mongoose.startSession();
     mongoSession.startTransaction();
+
+    if (!isRoomCreated) {
+      const newRoom = new Room({
+        belongsToProject: project_id,
+        users: [user._id, fromUser._id],
+      });
+
+      project.rooms.push(newRoom);
+      await newRoom.save({ session: mongoSession });
+    }
+
+    project.participants.push(user);
+    user.projects.push(project);
 
     await project.save({ session: mongoSession });
     await user.save({ session: mongoSession });

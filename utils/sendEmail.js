@@ -1,7 +1,7 @@
 const nodemailer = require("nodemailer");
 const envKeys = require("../config/envConfig");
 
-exports.sendInviteEmail = async (to, projectName, sentBy, invitationUrl) => {
+exports.sendInviteEmail = async (to, fromUser, projectName, invitationUrl) => {
   const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
@@ -15,7 +15,7 @@ exports.sendInviteEmail = async (to, projectName, sentBy, invitationUrl) => {
   });
 
   const subject = `Invitation to Project - ${projectName}`;
-  const html = `<h1>Invitation to Project - ${projectName} from ${sentBy}</h1>
+  const html = `<h1>Invitation to Project - ${projectName} from ${fromUser}</h1>
   <p>Please accept this invitation to our project by clicking on the following link.</p>
   <a href=${invitationUrl}> Click here</a>
   </div>`;
