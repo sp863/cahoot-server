@@ -27,6 +27,12 @@ const projectSchema = new mongoose.Schema(
         ref: "Form",
       },
     ],
+    rooms: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Room",
+      },
+    ],
   },
   { timestamps: true },
 );
