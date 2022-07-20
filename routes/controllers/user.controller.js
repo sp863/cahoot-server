@@ -65,3 +65,20 @@ exports.getUserProjects = async (req, res, next) => {
 
   res.send(user.projects);
 };
+
+exports.updateProfileImage = async (req, res, next) => {
+  const imageFile = req.file;
+  const { user_id } = req.params;
+
+  const user = await User.findById(user_id);
+
+  if (!user) return res.status(401).send({ result: "failure" });
+
+  user.profileImageKey = imageFile.filename;
+
+  await uploadFile(imageFile);
+  await unlinkFile(imageFile.path);
+  await user.save();
+
+  return res.send({ result: "success" });
+};

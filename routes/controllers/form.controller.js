@@ -3,7 +3,12 @@ const Project = require("../../models/Project");
 const fs = require("fs");
 const util = require("util");
 const unlinkFile = util.promisify(fs.unlink);
-const { uploadFile, getFileUrl, getFile } = require("../../aws/s3");
+const {
+  uploadFile,
+  uploadPdfFile,
+  getFileUrl,
+  getFile,
+} = require("../../aws/s3");
 const { default: mongoose } = require("mongoose");
 const User = require("../../models/User");
 const { signPDF } = require("../../digitalSignature/signPDF.js");
@@ -25,10 +30,13 @@ exports.uploadNewForm = async (req, res, next) => {
   const project = await Project.findById(project_id);
 
   project.forms.push(newForm);
-  for (const file of formFiles) {
+  for (const file of formFiles.slice(0, formFiles.length - 1)) {
     await uploadFile(file);
     await unlinkFile(file.path);
   }
+
+  await uploadPdfFile(formFiles[formFiles.length - 1]);
+  await unlinkFile(formFiles[formFiles.length - 1].path);
 
   const mongoSession = await mongoose.startSession();
   mongoSession.startTransaction();
@@ -87,6 +95,18 @@ exports.getDocForm = async (req, res, next) => {
   res.send(form);
 };
 
+exports.getDocFormFile = async (req, res, next) => {
+  const { form_id } = req.params;
+
+  const form = await Form.findById(form_id).lean();
+
+  if (!form) return res.status(404).send({ result: "failure" });
+
+  const formFileS3Url = await getFileUrl(form.pdfFileKey);
+
+  res.send(formFileS3Url);
+};
+
 exports.signDocForm = async (req, res, next) => {
   const { form_id } = req.params;
   const { inputData, user_id } = req.body;
@@ -100,7 +120,7 @@ exports.signDocForm = async (req, res, next) => {
   const pdfFile = await getFile(form.pdfFileKey);
 
   const base64Images = await signPDF(pdfFile, inputData);
-  await uploadFile({ path: "signed.pdf", filename: form.pdfFileKey });
+  await uploadPdfFile({ path: "signed.pdf", filename: form.pdfFileKey });
   await unlinkFile("signed.pdf");
 
   for (const [index] of base64Images.entries()) {
