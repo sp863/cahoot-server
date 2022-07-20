@@ -20,6 +20,19 @@ exports.uploadFile = (file) => {
   return s3.upload(uploadParams).promise();
 };
 
+exports.uploadPdfFile = (file) => {
+  const fileStream = fs.createReadStream(file.path);
+
+  const uploadParams = {
+    Bucket: envKeys.AWS_BUCKET_NAME,
+    Body: fileStream,
+    Key: file.filename,
+    ContentType: "application/pdf",
+  };
+
+  return s3.upload(uploadParams).promise();
+};
+
 exports.getFile = async (fileKey) => {
   const file = await s3
     .getObject({ Bucket: envKeys.AWS_BUCKET_NAME, Key: fileKey })

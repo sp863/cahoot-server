@@ -8,6 +8,7 @@ const upload = multer({ dest: "uploads/" });
 router.post("/new", upload.array("Doc-Form"), formController.uploadNewForm);
 router.get("/:project_id/forms", formController.getDocFormsByProject);
 router.get("/:form_id", formController.getDocForm);
+router.get("/:form_id/file", formController.getDocFormFile);
 router.patch("/:form_id/sign", formController.signDocForm);
 router.patch(
   "/:form_id/images",
