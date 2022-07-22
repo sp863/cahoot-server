@@ -3,7 +3,6 @@ const Message = require("../../models/Message");
 const Project = require("../../models/Project");
 const Room = require("../../models/Room");
 const { getFileUrl } = require("../../aws/s3");
-const envKeys = require("../../config/envConfig");
 const { Translate } = require("@google-cloud/translate").v2;
 
 exports.createRoom = async (req, res, next) => {
@@ -62,7 +61,6 @@ exports.getRoom = async (req, res, next) => {
 
 exports.getRoomsByUsers = async (req, res, next) => {
   const { rooms, user_id, members } = req.query;
-
   const filteredRooms = [];
 
   for (const room_id of rooms) {
@@ -116,7 +114,7 @@ exports.translateMessage = async (req, res, next) => {
 
   if (!message) return res.status(409).send({ result: "failure" });
 
-  const translate = new Translate(envKeys.GOOGLE_APPLICATION_CREDENTIALS);
+  const translate = new Translate();
   const target = "ko";
   const [translation] = await translate.translate(message.message, target);
 

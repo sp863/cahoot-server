@@ -6,7 +6,7 @@
 .env.test.local
 .env.production.local
 /uploads
-/cahoot-356720-664b4cde8926.json
+/google_credentials.json
 # Elastic Beanstalk Files
 .elasticbeanstalk/*
 !.elasticbeanstalk/*.cfg.yml

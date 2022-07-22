@@ -121,6 +121,7 @@ exports.signDocForm = async (req, res, next) => {
 
   const base64Images = await signPDF(pdfFile, inputData);
   await uploadPdfFile({ path: "signed.pdf", filename: form.pdfFileKey });
+
   await unlinkFile("signed.pdf");
 
   for (const [index] of base64Images.entries()) {
