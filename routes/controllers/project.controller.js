@@ -152,31 +152,23 @@ exports.verifyInvite = async (req, res, next) => {
   jwt.verify(code, envKeys.ACCESS_TOKEN_SECRET, async (error, decoded) => {
     if (error) return res.status(403).send({ result: "failure" });
 
-    const { from, to, project_id } = decoded;
+    const { to, project_id } = decoded;
 
-    const fromUser = await User.findOne({ email: from });
     const user = await User.findOne({ email: to });
-    const project = await Project.findById(project_id).populate("rooms");
+    const project = await Project.findById(project_id)
+      .populate("participants")
+      .populate("rooms");
 
     if (!user) return res.status(403).send({ result: "invalid account" });
     if (!project) return res.status(403).send({ result: "failure" });
-    if (!fromUser) return res.status(403).send({ result: "failure" });
-
-    let isRoomCreated = false;
-
-    for (const room of project.rooms) {
-      if (room.users.includes(fromUser._id) && room.users.includes(user._id)) {
-        isRoomCreated = true;
-      }
-    }
 
     const mongoSession = await mongoose.startSession();
     mongoSession.startTransaction();
 
-    if (!isRoomCreated) {
+    for (const member of project.participants) {
       const newRoom = new Room({
         belongsToProject: project_id,
-        users: [user._id, fromUser._id],
+        users: [user._id, member._id],
       });
 
       project.rooms.push(newRoom);
@@ -194,4 +186,19 @@ exports.verifyInvite = async (req, res, next) => {
 
     return res.send({ result: project.name });
   });
+};
+
+exports.updateGithub = async (req, res, next) => {
+  const { project_id } = req.params;
+  const { url } = req.body;
+
+  const project = await Project.findById(project_id);
+
+  if (!project) return res.status(409).send({ result: "failure" });
+
+  project.projectUrl = url;
+
+  await project.save();
+
+  return res.send({ result: "success" });
 };
